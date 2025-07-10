@@ -43,6 +43,18 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onCancel }) 
     onSave(formData);
   };
 
+  const handleClear = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: ''
+    });
+    // Only call onCancel if we're not in edit mode
+    if (!student) {
+      onCancel();
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="h-100 d-flex flex-column">
       <div className="mb-3">
@@ -79,8 +91,13 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onCancel }) 
         />
       </div>
       <div className="mt-auto d-flex justify-content-end gap-2">
-        <button type="button" className="btn btn-outline-secondary" onClick={onCancel}>
-          Cancel
+        <button 
+          type="button" 
+          className="btn btn-outline-secondary" 
+          onClick={handleClear}
+          disabled={!formData.name && !formData.email && !formData.phone}
+        >
+          Clear
         </button>
         <button type="submit" className="btn btn-primary">
           {student ? 'Update' : 'Add'} Student
