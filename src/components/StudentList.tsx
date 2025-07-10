@@ -82,7 +82,6 @@ const StudentList: React.FC<StudentListProps> = ({
         <table className="table table-hover mb-0">
           <thead>
             <tr>
-              <th>ID</th>
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
@@ -92,7 +91,6 @@ const StudentList: React.FC<StudentListProps> = ({
           <tbody>
             {students.map((student) => (
               <tr key={student.id}>
-                <td>{student.id}</td>
                 <td>{student.name}</td>
                 <td>{student.email}</td>
                 <td>{student.phone}</td>
