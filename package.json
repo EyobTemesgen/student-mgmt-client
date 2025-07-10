@@ -11,9 +11,18 @@
     "@types/node": "^16.18.126",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/react-toastify": "^4.0.2",
+    "axios": "^1.10.0",
+    "bootstrap": "^5.3.7",
+    "bootstrap-icons": "^1.13.1",
+    "http-proxy-middleware": "^3.0.5",
     "react": "^19.1.0",
+    "react-bootstrap": "^2.10.10",
+    "react-bootstrap-icons": "^1.11.6",
     "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3",
     "react-scripts": "5.0.1",
+    "react-toastify": "^11.0.5",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -40,5 +49,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react-router-dom": "^5.3.3"
   }
 }
