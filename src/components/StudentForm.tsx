@@ -3,7 +3,7 @@ import { Student } from '../types/student';
 
 interface StudentFormProps {
   student: Student | null;
-  onSave: (student: Omit<Student, 'id'>) => void;
+  onSave: (student: Omit<Student, 'id'>) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -13,6 +13,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onCancel }) 
     email: '',
     phone: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (student) {
@@ -38,9 +40,25 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onCancel }) 
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    setError(null);
+    setIsSubmitting(true);
+    
+    try {
+      await onSave(formData);
+    } catch (err) {
+      // Error is already handled by the parent component
+      // We just need to prevent the form from resetting
+      console.error('Error in form submission:', err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unknown error occurred');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClear = () => {
@@ -90,6 +108,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onCancel }) 
           required
         />
       </div>
+      
+      {error && (
+        <div className="alert alert-danger mt-3" role="alert">
+          {error}
+        </div>
+      )}
       <div className="mt-auto d-flex justify-content-end gap-2">
         <button 
           type="button" 
@@ -99,9 +123,34 @@ const StudentForm: React.FC<StudentFormProps> = ({ student, onSave, onCancel }) 
         >
           Clear
         </button>
-        <button type="submit" className="btn btn-primary">
-          {student ? 'Update' : 'Add'} Student
-        </button>
+        <div style={{ width: '100px' }}>
+          <button 
+            type="submit" 
+            className="btn btn-primary w-100 position-relative"
+            disabled={isSubmitting}
+            style={{ minHeight: '38px' }}
+          >
+            <span 
+              style={{
+                visibility: isSubmitting ? 'hidden' : 'visible',
+                display: 'inline-block',
+                width: '100%'
+              }}
+            >
+              {student ? 'Update' : 'Save'}
+            </span>
+            {isSubmitting && (
+              <div className="position-absolute top-50 start-50 translate-middle">
+                <span 
+                  className="spinner-border spinner-border-sm" 
+                  role="status" 
+                  aria-hidden="true"
+                ></span>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            )}
+          </button>
+        </div>
       </div>
     </form>
   );

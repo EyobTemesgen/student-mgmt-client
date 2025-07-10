@@ -5,17 +5,46 @@ const API_BASE_URL = 'http://localhost:8080';
 const API_URL = `${API_BASE_URL}/api/students`;
 
 const handleResponse = async (response: Response) => {
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`HTTP error! status: ${response.status}, message: ${error}`);
-  }
   // For 204 No Content responses, return null
   if (response.status === 204) {
     return null;
   }
-  // Only try to parse JSON if there's content
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
+
+  // Get the response text first to handle both JSON and text responses
+  const responseText = await response.text();
+  let responseData;
+  
+  // Try to parse JSON if there's content
+  if (responseText) {
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (e) {
+      responseData = { message: responseText };
+    }
+  }
+
+  if (!response.ok) {
+    // Handle duplicate email error specifically
+    if (response.status === 400 && responseData?.message?.includes('email already exists')) {
+      throw new Error('A student with this email already exists. Please use a different email address.');
+    }
+    
+    // Handle validation errors
+    if (response.status === 400 && responseData?.errors) {
+      const errorMessages = Object.values(responseData.errors).flat().join(' ');
+      throw new Error(errorMessages || 'Validation failed. Please check your input.');
+    }
+    
+    // Handle other error responses with message
+    if (responseData?.message) {
+      throw new Error(responseData.message);
+    }
+    
+    // Fallback error message
+    throw new Error(`Request failed with status ${response.status}: ${response.statusText}`);
+  }
+  
+  return responseData || null;
 };
 
 export const getStudents = async (): Promise<Student[]> => {

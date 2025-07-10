@@ -71,8 +71,20 @@ const App: React.FC = () => {
       await fetchStudents();
     } catch (error) {
       console.error('Error saving student:', error);
-      toast.error(`Failed to save student: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error; // Re-throw to prevent the form from resetting on error
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('email already exists')) {
+          toast.error(error.message, { autoClose: 5000 });
+        } else {
+          toast.error(`Failed to save student: ${error.message}`);
+        }
+      } else {
+        toast.error('An unknown error occurred while saving the student');
+      }
+      
+      // Re-throw the error to prevent the form from resetting
+      throw error;
     }
   };
 
@@ -121,97 +133,104 @@ const App: React.FC = () => {
         pauseOnHover
       />
       <div className="app-container">
-      <Sidebar />
-      <div className="main-content">
-        <header className="app-header">
-          <h1 className="h4 mb-0">School Management System</h1>
-          <form onSubmit={handleSearch} className="d-flex" style={{ maxWidth: '400px' }}>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control form-control-sm"
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button type="submit" className="btn btn-primary btn-sm">
-                <i className="bi bi-search"></i>
-              </button>
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary btn-sm"
-                  onClick={() => {
-                    setSearchTerm('');
-                    fetchStudents();
-                  }}
-                >
-                  <i className="bi bi-x-lg"></i>
+        <Sidebar />
+        <div className="main-content">
+          <header className="app-header">
+            <h1 className="h4 mb-0">School Management System</h1>
+            <form onSubmit={handleSearch} className="d-flex" style={{ maxWidth: '400px' }}>
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control form-control-sm"
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <button type="submit" className="btn btn-primary btn-sm">
+                  <i className="bi bi-search"></i>
                 </button>
-              )}
-            </div>
-          </form>
-        </header>
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => {
+                      setSearchTerm('');
+                      fetchStudents();
+                    }}
+                  >
+                    <i className="bi bi-x-lg"></i>
+                  </button>
+                )}
+              </div>
+            </form>
+          </header>
 
-        <div className="p-4">
-          <div className="row g-4">
-            {/* Form Column */}
-            <div className="col-lg-4">
-              <div className="card h-100">
-                <div className="card-header d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">
-                    {editingStudent ? 'Edit Student' : 'Add New Student'}
-                  </h5>
-                  {editingStudent && (
-                    <button 
-                      className="btn btn-sm btn-outline-secondary" 
-                      onClick={() => setEditingStudent(null)}
-                    >
-                      <i className="bi bi-plus-lg"></i> New
-                    </button>
-                  )}
-                </div>
-                <div className="card-body d-flex flex-column">
-                  <StudentForm
-                    student={editingStudent}
-                    onSave={handleSave}
-                    onCancel={() => setEditingStudent(null)}
-                  />
+          <div className="p-4">
+            <div className="row g-4">
+              {/* Form Column */}
+              <div className="col-lg-4">
+                <div className="card h-100">
+                  <div className="card-header d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">
+                      {editingStudent ? 'Edit Student' : 'Add New Student'}
+                    </h5>
+                    {editingStudent && (
+                      <button 
+                        className="btn btn-sm btn-outline-secondary" 
+                        onClick={() => setEditingStudent(null)}
+                      >
+                        <i className="bi bi-plus-lg"></i> New
+                      </button>
+                    )}
+                  </div>
+                  <div className="card-body">
+                    <StudentForm
+                      student={editingStudent}
+                      onSave={async (studentData) => {
+                        try {
+                          await handleSave(studentData);
+                          return Promise.resolve();
+                        } catch (error) {
+                          return Promise.reject(error);
+                        }
+                      }}
+                      onCancel={() => setEditingStudent(null)}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* List Column */}
-            <div className="col-lg-8">
-              <div className="card h-100">
-                <div className="card-header d-flex justify-content-between align-items-center">
-                  <h5 className="mb-0">Students List</h5>
-                  <span className="badge bg-primary">{students.length} students</span>
-                </div>
-                <div className="card-body p-0">
-                  {loading ? (
-                    <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '300px' }}>
-                      <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
+              {/* List Column */}
+              <div className="col-lg-8">
+                <div className="card h-100">
+                  <div className="card-header d-flex justify-content-between align-items-center">
+                    <h5 className="mb-0">Students List</h5>
+                    <span className="badge bg-primary">{students.length} students</span>
+                  </div>
+                  <div className="card-body p-0">
+                    {loading ? (
+                      <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '300px' }}>
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Loading...</span>
+                        </div>
+                        <p className="mt-3 mb-0">Loading students...</p>
                       </div>
-                      <p className="mt-3 mb-0">Loading students...</p>
-                    </div>
-                  ) : (
-                    <div className="table-responsive">
-                      <StudentList
-                        students={students}
-                        onEdit={handleEdit}
-                        onUpdate={handleUpdate}
-                        onDelete={handleDelete}
-                      />
-                    </div>
-                  )}
+                    ) : (
+                      <div className="table-responsive">
+                        <StudentList
+                          students={students}
+                          onEdit={handleEdit}
+                          onUpdate={handleUpdate}
+                          onDelete={handleDelete}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </>
   );
